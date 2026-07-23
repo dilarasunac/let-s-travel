@@ -1,6 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { createElement, useState, type ChangeEvent } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,6 +13,32 @@ import { PALETTE, T, ThemeId, THEMES } from '@/constants/travel';
 import { kapakFotoSec, kapakFotoSil } from '@/lib/cover-photo';
 
 const bosTaslak: NewTripDraft = { sehir: '', bas: '', bit: '', tema: 'city' };
+
+const webTarihStili = {
+  width: '100%',
+  marginTop: 5,
+  paddingTop: 11,
+  paddingBottom: 11,
+  paddingLeft: 13,
+  paddingRight: 13,
+  borderRadius: 12,
+  backgroundColor: PALETTE.cream,
+  color: PALETTE.forest,
+  fontSize: 14,
+  fontFamily: 'inherit',
+  border: 'none',
+  outline: 'none',
+  boxSizing: 'border-box' as const,
+};
+
+function WebTarihAlani({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return createElement('input', {
+    type: 'date',
+    value,
+    onChange: (e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
+    style: webTarihStili,
+  });
+}
 
 interface DialogState {
   title?: string;
@@ -84,14 +110,22 @@ export default function EkleScreen() {
 
         <View style={styles.dateRow}>
           <Field label={t.start} flex>
-            <Pressable style={sharedStyles.input} onPress={() => setPickerFor('bas')}>
-              <Text style={{ color: yeni.bas ? PALETTE.forest : PALETTE.moss }}>{yeni.bas || t.pick}</Text>
-            </Pressable>
+            {Platform.OS === 'web' ? (
+              <WebTarihAlani value={yeni.bas} onChange={(v) => setYeni((prev) => ({ ...prev, bas: v }))} />
+            ) : (
+              <Pressable style={sharedStyles.input} onPress={() => setPickerFor('bas')}>
+                <Text style={{ color: yeni.bas ? PALETTE.forest : PALETTE.moss }}>{yeni.bas || t.pick}</Text>
+              </Pressable>
+            )}
           </Field>
           <Field label={t.end} flex>
-            <Pressable style={sharedStyles.input} onPress={() => setPickerFor('bit')}>
-              <Text style={{ color: yeni.bit ? PALETTE.forest : PALETTE.moss }}>{yeni.bit || t.pick}</Text>
-            </Pressable>
+            {Platform.OS === 'web' ? (
+              <WebTarihAlani value={yeni.bit} onChange={(v) => setYeni((prev) => ({ ...prev, bit: v }))} />
+            ) : (
+              <Pressable style={sharedStyles.input} onPress={() => setPickerFor('bit')}>
+                <Text style={{ color: yeni.bit ? PALETTE.forest : PALETTE.moss }}>{yeni.bit || t.pick}</Text>
+              </Pressable>
+            )}
           </Field>
         </View>
 
