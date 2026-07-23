@@ -2,12 +2,15 @@ import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 
+import { webFotoKaydet, webFotoReferansiMi, webFotoSil } from '@/lib/web-photo-store';
+
 const KAPAK_KLASORU = 'covers';
 
 export type KapakSecSonuc =
   | { status: 'ok'; uri: string }
   | { status: 'cancelled' }
   | { status: 'denied' }
+  | { status: 'storage' }
   | { status: 'error' };
 
 function uzantiAl(uri: string): string {
@@ -28,14 +31,21 @@ export async function kapakFotoSec(): Promise<KapakSecSonuc> {
     });
     if (sonuc.canceled || !sonuc.assets?.length) return { status: 'cancelled' };
 
-    const kaynakUri = sonuc.assets[0].uri;
+    const secilen = sonuc.assets[0];
 
-    // expo-file-system web'i desteklemiyor - web'de seçilen fotoğraf (blob/data URI)
-    // kopyalanmadan doğrudan kullanılır.
+    // expo-file-system web'i desteklemiyor - web'de seçilen fotoğraf küçültülüp
+    // IndexedDB'ye kopyalanır (blob URI kalıcı değildir, sayfa yenilenince geçersiz olur).
     if (Platform.OS === 'web') {
-      return { status: 'ok', uri: kaynakUri };
+      try {
+        const blob = secilen.file ?? (await (await fetch(secilen.uri)).blob());
+        const referans = await webFotoKaydet(blob);
+        return { status: 'ok', uri: referans };
+      } catch {
+        return { status: 'storage' };
+      }
     }
 
+    const kaynakUri = secilen.uri;
     const dizin = new Directory(Paths.document, KAPAK_KLASORU);
     dizin.create({ idempotent: true, intermediates: true });
 
@@ -50,7 +60,11 @@ export async function kapakFotoSec(): Promise<KapakSecSonuc> {
 }
 
 export function kapakFotoSil(uri?: string) {
-  if (!uri || Platform.OS === 'web') return;
+  if (!uri) return;
+  if (Platform.OS === 'web') {
+    if (webFotoReferansiMi(uri)) webFotoSil(uri).catch(() => {});
+    return;
+  }
   try {
     const dosya = new File(uri);
     if (dosya.exists) dosya.delete();

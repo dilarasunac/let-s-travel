@@ -145,6 +145,8 @@ export default function TripDetayScreen() {
       kapakFotoSil(eskiFoto);
     } else if (sonuc.status === 'denied') {
       setDialog({ title: t.permDeniedTitle, message: t.permDeniedMsg, buttons: [{ text: t.ok, tone: 'cancel' }] });
+    } else if (sonuc.status === 'storage') {
+      setDialog({ title: t.storageErrorTitle, message: t.storageErrorMsg, buttons: [{ text: t.ok, tone: 'cancel' }] });
     } else if (sonuc.status === 'error') {
       setDialog({ title: t.photoErrorTitle, message: t.photoErrorMsg, buttons: [{ text: t.ok, tone: 'cancel' }] });
     }
