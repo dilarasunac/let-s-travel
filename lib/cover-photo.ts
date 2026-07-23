@@ -1,0 +1,52 @@
+import { Directory, File, Paths } from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
+
+const KAPAK_KLASORU = 'covers';
+
+export type KapakSecSonuc =
+  | { status: 'ok'; uri: string }
+  | { status: 'cancelled' }
+  | { status: 'denied' }
+  | { status: 'error' };
+
+function uzantiAl(uri: string): string {
+  const temiz = uri.split('?')[0];
+  const parca = temiz.split('.').pop();
+  return parca && parca.length <= 5 ? parca : 'jpg';
+}
+
+export async function kapakFotoSec(): Promise<KapakSecSonuc> {
+  try {
+    const izin = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!izin.granted) return { status: 'denied' };
+
+    const sonuc = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.8,
+    });
+    if (sonuc.canceled || !sonuc.assets?.length) return { status: 'cancelled' };
+
+    const kaynakUri = sonuc.assets[0].uri;
+    const dizin = new Directory(Paths.document, KAPAK_KLASORU);
+    dizin.create({ idempotent: true, intermediates: true });
+
+    const dosyaAdi = `${Date.now()}-${Math.round(Math.random() * 1e6)}.${uzantiAl(kaynakUri)}`;
+    const hedef = new File(dizin, dosyaAdi);
+    new File(kaynakUri).copy(hedef);
+
+    return { status: 'ok', uri: hedef.uri };
+  } catch {
+    return { status: 'error' };
+  }
+}
+
+export function kapakFotoSil(uri?: string) {
+  if (!uri) return;
+  try {
+    const dosya = new File(uri);
+    if (dosya.exists) dosya.delete();
+  } catch {
+    // dosya sistemi hatası uygulamayı çökertmesin
+  }
+}
