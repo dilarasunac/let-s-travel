@@ -1,5 +1,6 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
+import { Platform } from 'react-native';
 
 const KAPAK_KLASORU = 'covers';
 
@@ -28,6 +29,13 @@ export async function kapakFotoSec(): Promise<KapakSecSonuc> {
     if (sonuc.canceled || !sonuc.assets?.length) return { status: 'cancelled' };
 
     const kaynakUri = sonuc.assets[0].uri;
+
+    // expo-file-system web'i desteklemiyor - web'de seçilen fotoğraf (blob/data URI)
+    // kopyalanmadan doğrudan kullanılır.
+    if (Platform.OS === 'web') {
+      return { status: 'ok', uri: kaynakUri };
+    }
+
     const dizin = new Directory(Paths.document, KAPAK_KLASORU);
     dizin.create({ idempotent: true, intermediates: true });
 
@@ -42,7 +50,7 @@ export async function kapakFotoSec(): Promise<KapakSecSonuc> {
 }
 
 export function kapakFotoSil(uri?: string) {
-  if (!uri) return;
+  if (!uri || Platform.OS === 'web') return;
   try {
     const dosya = new File(uri);
     if (dosya.exists) dosya.delete();
