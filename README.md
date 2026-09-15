@@ -8,6 +8,10 @@ tutabilirsin.
 - Kategori bazlı seyahat planlama
 - Her kategori için özelleştirilmiş alanlar
 - Mobil öncelikli arayüz
+ 
+## Ekran Görüntüleri
+<img src="screenshots/ekran1.jpeg" width="250"> <img src="screenshots/ekran2.jpeg" width="250">
+<img src="screenshots/ekran3.jpeg" width="250"> <img src="screenshots/ekran4.jpeg" width="250">
 
 ## Kullanılan Teknolojiler
 - React Native (Expo)
